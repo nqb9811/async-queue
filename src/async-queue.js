@@ -3,7 +3,7 @@ const { Queue } = require('./queue');
 class AsyncQueue {
   constructor() {
     this._queue = new Queue();
-    this._processing = false; // maybe another better way?
+    this._processing = false;
   }
 
   async process(callback) {
