@@ -7,13 +7,19 @@
     "test": "jest",
     "lint": "eslint --fix"
   },
-  "keywords": [],
+  "keywords": [
+    "Async",
+    "Queue",
+    "Hierarchical",
+    "Sequential",
+    "Process"
+  ],
   "author": {
     "name": "Bao Nguyen",
     "email": "nqb9811@gmail.com"
   },
   "license": "MIT",
-  "description": "",
+  "description": "Simple Node.js async queue to ensure async operations are processed sequentially",
   "repository": {
     "type": "git",
     "url": "https://github.com/nqb9811/async-queue.git"
