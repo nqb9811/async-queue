@@ -12,11 +12,12 @@ class HierarchicalStore {
     this._root = new HierarchicalStoreNode('', null);
   }
 
-  add(path, data) {
+  addIfNotExist(path, data) {
     const pathSegments = path
       .split(this._pathSeparator)
       .filter((pathSegment) => pathSegment);
 
+    let parent = null;
     let node = this._root;
 
     for (let i = 0; i < pathSegments.length; i++) {
@@ -26,8 +27,20 @@ class HierarchicalStore {
         node.children.set(pathSegment, new HierarchicalStoreNode(pathSegment, data));
       }
 
+      parent = node;
       node = node.children.get(pathSegment);
     }
+
+    const remove = () => {
+      if (parent) {
+        parent.children.delete(node.path);
+      }
+    };
+
+    return {
+      node,
+      remove,
+    };
   }
 
   lookup(path) {
@@ -80,8 +93,6 @@ class HierarchicalStore {
       };
     }
   }
-
-
 }
 
 module.exports = {
