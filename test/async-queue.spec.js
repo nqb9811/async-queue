@@ -53,7 +53,7 @@ describe('Async queue specs', () => {
     expect(operationElapsedTimes).toEqual([50, 10]);
   });
 
-  test('should not break if there is error thrown in an operation', async () => {
+  test('should not break if there is unexpected error thrown in an operation', async () => {
     const queue = new AsyncQueue();
     const operationPromises = [];
     let promise = queue.process((resolve, reject) => {
