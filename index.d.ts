@@ -1,4 +1,4 @@
-type Executor = (resolve: (data: any) => void, reject: (error) => void) => void | Promise<void>;
+type Executor = (resolve: (data: any) => void, reject: (error: any) => void) => void | Promise<void>;
 
 export class AsyncQueue {
   process(executor: Executor): Promise<any>;
