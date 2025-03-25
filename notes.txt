@@ -14,4 +14,4 @@ Hierarchical blocking:
   => There can be path segment is the actual processed one, but still stored as a node
   => Such kind of node is marked with "data: null"
   => A node is only deleted in case: no operation and no children
-  => Get function to delete after adding, to avoid another traverse
+  => Get function to delete after adding, to avoid another traverse > the node can have remove method
