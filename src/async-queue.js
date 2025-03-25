@@ -6,7 +6,7 @@ class AsyncQueue {
     this._processing = false;
   }
 
-  async process(callback) {
+  async process(executor) {
     let resolve;
     let reject;
 
@@ -19,7 +19,7 @@ class AsyncQueue {
       promise,
       execute: () => {
         try {
-          const maybePromise = callback(resolve, reject);
+          const maybePromise = executor(resolve, reject);
 
           if (maybePromise instanceof Promise) {
             maybePromise.catch((error) => reject(error));

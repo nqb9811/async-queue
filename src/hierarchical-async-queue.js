@@ -1,15 +1,12 @@
 const { HierarchicalStore } = require('./hierarchical-store');
+const { Queue } = require('./queue');
 
 class HierarchicalAsyncQueue {
   constructor(pathSeparator) {
     this._store = new HierarchicalStore(pathSeparator);
-    // When an operation on a path starts, it checks if there is another path currently blocks it
-    // If so, it sets an entry here
-    // Then, when the blocking path resolves, it could start the operations of blocked paths
-    this._blockRegistry = new Map();
   }
 
-  async process(path, callback) {
+  async process(path, executor) {
     let resolve;
     let reject;
 
@@ -19,10 +16,12 @@ class HierarchicalAsyncQueue {
     });
 
     const operation = {
+      path,
+      submittedAt: performance.now(),
       promise,
       execute: () => {
         try {
-          const maybePromise = callback(resolve, reject);
+          const maybePromise = executor(resolve, reject);
 
           if (maybePromise instanceof Promise) {
             maybePromise.catch((error) => reject(error));
@@ -33,16 +32,33 @@ class HierarchicalAsyncQueue {
       },
     };
 
-    this._queue.enqueue(operation);
+    const node = this._store.getOrAddIfNotExist(path);
 
-    if (!this._processing) {
-      this._getNextOperationAndProcess();
+    if (!node.data) {
+      node.data = {
+        pendingOperations: new Queue(),
+        lastSubmittedOperation: null,
+        processingOperation: null,
+      };
     }
+
+    node.data.pendingOperations.enqueue(operation);
+    node.data.lastSubmittedOperation = operation;
+
+    this._checkIfOperationIsNotBlockedAndProcess(operation);
 
     return promise;
   }
 
+  _checkIfOperationIsNotBlockedAndProcess(operation) {
+    // is there parent/child of me?
+    // which is the last submitted parent/child operation?
+    // which is the processing parent/child operation?
 
+    // is my another operation on me?
+    // which is the last submitted parent/child operation?
+    // which is the processing parent/child operation?
+  }
 }
 
 module.exports = {

@@ -12,7 +12,7 @@ class HierarchicalStore {
     this._root = new HierarchicalStoreNode('', null);
   }
 
-  addIfNotExist(path, data) {
+  getOrAddIfNotExist(path) {
     const pathSegments = path
       .split(this._pathSeparator)
       .filter((pathSegment) => pathSegment);
@@ -22,13 +22,18 @@ class HierarchicalStore {
 
     for (let i = 0; i < pathSegments.length; i++) {
       const pathSegment = pathSegments[i];
+      const lastSegment = i === pathSegments.length - 1;
 
       if (!node.children.has(pathSegment)) {
-        node.children.set(pathSegment, new HierarchicalStoreNode(pathSegment, data));
+        node.children.set(pathSegment, new HierarchicalStoreNode(pathSegment, null));
       }
 
       parent = node;
       node = node.children.get(pathSegment);
+
+      if (lastSegment) {
+        node.data = data;
+      }
     }
 
     const remove = () => {
@@ -41,61 +46,6 @@ class HierarchicalStore {
       node,
       remove,
     };
-  }
-
-  lookup(path) {
-    const pathSegments = path
-      .split(this._pathSeparator)
-      .filter((pathSegment) => pathSegment);
-
-    let node = this._root;
-
-    for (let i = 0; i < pathSegments.length; i++) {
-      const pathSegment = pathSegments[i];
-
-      if (!node.children.has(pathSegment)) {
-        return null;
-      }
-
-      node = node.children.get(pathSegment);
-    }
-
-    return node;
-  }
-
-  remove(path) {
-    const pathSegments = path
-      .split(this._pathSeparator)
-      .filter((pathSegment) => pathSegment);
-
-    const stack = [];
-
-    let node = this;
-
-    for (let i = 0; i < pathSegments.length; i++) {
-      const pathSegment = pathSegments[i];
-
-      if (!node.children.has(pathSegment)) {
-        return;
-      }
-
-      stack.push([node, pathSegment]);
-      node = node.children.get(pathSegment);
-    }
-
-    while (stack.length) {
-      const [parent, pathSegment] = stack.pop();
-
-      parent.children.delete(pathSegment);
-
-      if (parent.children.size) {
-        break;
-      };
-    }
-  }
-
-  hasAncestorOrDescendant(path) {
-
   }
 }
 
