@@ -72,6 +72,10 @@ class HierarchicalAsyncQueue {
     operation.promise
       .catch(() => null) // to make sure the finally logic is called
       .finally(() => {
+        if (node.data.lastSubmittedOperation === operation) {
+          node.remove();
+        }
+
         this._pendingOperations.delete(operation);
 
         if (!this._pendingOperations.size) {
