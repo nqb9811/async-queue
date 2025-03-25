@@ -38,8 +38,6 @@ class HierarchicalAsyncQueue {
       node.data = {
         lastSubmittedOperation: operation,
       };
-    } else {
-      node.data.lastSubmittedOperation = operation;
     }
 
     this._pendingOperations.add(operation);
@@ -50,13 +48,15 @@ class HierarchicalAsyncQueue {
 
   _waitOrProcess(node, operation) {
     const blockingNodes = [
-      ...this._hierarchicalStore.getNonEmptyAncestors(operation), // possibly blocked by parent
-      ...this._hierarchicalStore.getNonEmptyDescendants(operation), // possibly blocked by children,
+      ...this._hierarchicalStore.getNonEmptyAncestors(node), // possibly blocked by parent
+      ...this._hierarchicalStore.getNonEmptyDescendants(node), // possibly blocked by children,
     ];
 
     if (node.data.lastSubmittedOperation !== operation) {
       blockingNodes.push(node); // possibly blocked by itself (another operation submitted before)
     }
+
+    node.data.lastSubmittedOperation = operation;
 
     let blockingNode = blockingNodes[0];
 
@@ -84,7 +84,7 @@ class HierarchicalAsyncQueue {
       });
 
     if (blockingNode) {
-      blockingNode.operation.promise
+      blockingNode.data.lastSubmittedOperation.promise
         .catch(() => null) // to make sure the finally logic is called
         .finally(() => operation.execute());
     } else {

@@ -33,7 +33,6 @@ class HierarchicalStore {
 
     for (let i = 0; i < pathSegments.length; i++) {
       const pathSegment = pathSegments[i];
-      const lastSegment = i === pathSegments.length - 1;
 
       if (!node.children.has(pathSegment)) {
         node.children.set(pathSegment, new HierarchicalStoreNode(pathSegment, node, null));
@@ -41,10 +40,6 @@ class HierarchicalStore {
 
       parent = node;
       node = node.children.get(pathSegment);
-
-      if (lastSegment) {
-        node.data = data;
-      }
     }
 
     return node;
@@ -69,7 +64,7 @@ class HierarchicalStore {
   getNonEmptyDescendants(node) {
     const nonEmptyDescendants = [];
 
-    for (const child of node.children) {
+    for (const [path, child] of node.children) {
       if (child.data) {
         nonEmptyDescendants.push(child);
       }

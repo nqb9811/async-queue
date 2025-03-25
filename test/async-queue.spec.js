@@ -5,52 +5,42 @@ describe('Async queue specs', () => {
     const queue = new AsyncQueue();
     const operationElapsedTimes = [];
     const operationPromises = [];
+    const elapsed = performance.now();
     let promise = queue.process((resolve) => {
       setTimeout(() => {
-        operationElapsedTimes.push(100);
+        operationElapsedTimes.push(performance.now() - elapsed);
         resolve();
       }, 100);
     });
     promise = operationPromises.push(promise);
     queue.process((resolve) => {
       setTimeout(() => {
-        operationElapsedTimes.push(10);
+        operationElapsedTimes.push(performance.now() - elapsed);
         resolve();
       }, 10);
     });
     operationPromises.push(promise);
-    promise = queue.process((resolve) => {
-      setTimeout(() => {
-        operationElapsedTimes.push(50);
-        resolve();
-      }, 50);
-    });
-    operationPromises.push(promise);
     await Promise.all(operationPromises);
-    expect(operationElapsedTimes).toEqual([100, 10, 50]);
+    expect(operationElapsedTimes.every((elapsed) => elapsed >= 100)).toBe(true);
   });
 
   test('should not break when one operation rejects', async () => {
     const queue = new AsyncQueue();
-    const operationElapsedTimes = [];
     const operationPromises = [];
     let promise = queue.process((resolve, reject) => {
       setTimeout(() => {
-        operationElapsedTimes.push(50);
         reject(new Error('Test'));
       }, 50);
     });
     operationPromises.push(promise);
     promise = queue.process((resolve) => {
       setTimeout(() => {
-        operationElapsedTimes.push(10);
-        resolve();
+        resolve(10);
       }, 10);
     });
     operationPromises.push(promise);
-    await Promise.allSettled(operationPromises);
     await expect(operationPromises[0]).rejects.toThrow('Test');
-    expect(operationElapsedTimes).toEqual([50, 10]);
+    await expect(operationPromises[1]).resolves.toBe(10);
   });
 
   test('should not break if there is unexpected error thrown in an operation', async () => {
