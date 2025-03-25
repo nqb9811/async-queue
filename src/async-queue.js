@@ -2,7 +2,7 @@ const { Queue } = require('./queue');
 
 class AsyncQueue {
   constructor() {
-    this._queue = new Queue();
+    this._pendingOperations = new Queue();
     this._processing = false;
   }
 
@@ -30,7 +30,7 @@ class AsyncQueue {
       },
     };
 
-    this._queue.enqueue(operation);
+    this._pendingOperations.enqueue(operation);
 
     if (!this._processing) {
       this._getNextOperationAndProcess();
@@ -40,14 +40,14 @@ class AsyncQueue {
   }
 
   _getNextOperationAndProcess() {
-    if (!this._queue.length) {
+    if (!this._pendingOperations.length) {
       this._processing = false;
       return;
     }
 
     this._processing = true;
 
-    const operation = this._queue.dequeue();
+    const operation = this._pendingOperations.dequeue();
     const { promise, execute } = operation;
 
     promise

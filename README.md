@@ -1,38 +1,11 @@
 # Async Queue
 
-Simple Node.js \[hierarchical\] async queue to ensure async operations are processed sequentially
+Node.js \[hierarchical\] async queue to ensure async operations are processed sequentially
 
 The package provides 2 classes:
-- **AsyncQueue**: for simple sequential blocking by submitting order (the 2nd operation only starts after the 1st has been completed)
+- **AsyncQueue**: for sequential processing by submitting order (the 2nd operation only starts after the 1st has been completed)
 
 - **HierarchicalAsyncQueue**: like the above AsyncQueue, with additional hierarchical (ancestor/descendant) blocking. That means, if an operation is submitted on a child/parent and there is already a submitted or processing operation on its parent/child, it will wait until the other completes
-
-## Use cases
-
-The queue is usually necessary when you want to prevent multiple processing at the same time on the same "target", like multiple writes on the same files, or multiple writes to a file and the folder contains it
-
-Sample code:
-
-```js
-// Here the operations could be conflict, as server handles requests concurrently
-app.put('config/:id/params', async (req, res) => {
-  //...
-  config.params = req.params;
-  await saveConfigFile(`./configs/${req.params.id}.json`, config);
-  //...
-});
-app.put('config/:id/image', async (req, res) => {
-  //...
-  config.image = req.image;
-  await saveConfigFile(`./configs/${req.params.id}.json`, config);
-  //...
-});
-app.delete('config', async (req, res) => {
-  //...
-  await deleteAllConfigFiles('./configs/');
-  //...
-});
-```
 
 ## Installation
 

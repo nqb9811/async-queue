@@ -93,6 +93,10 @@ class HierarchicalStore {
       };
     }
   }
+
+  hasAncestorOrDescendant(path) {
+
+  }
 }
 
 module.exports = {
