@@ -33,8 +33,18 @@ describe('Async queue specs', () => {
 
     let promise = queue.process((resolve, reject) => {
       setTimeout(() => {
-        reject(new Error('Test'));
+        reject(new Error('Test1'));
       }, 50);
+    });
+    operationPromises.push(promise);
+
+    promise = queue.process((resolve, reject) => {
+      throw new Error('Test2');
+    });
+    operationPromises.push(promise);
+
+    promise = queue.process((resolve) => {
+      return Promise.reject(new Error('Test3'));
     });
     operationPromises.push(promise);
 
@@ -45,25 +55,9 @@ describe('Async queue specs', () => {
     });
     operationPromises.push(promise);
 
-    await expect(operationPromises[0]).rejects.toThrow('Test');
-    await expect(operationPromises[1]).resolves.toBe(10);
-  });
-
-  test('should not break if there is unexpected error thrown in an operation', async () => {
-    const queue = new AsyncQueue();
-    const operationPromises = [];
-
-    let promise = queue.process((resolve, reject) => {
-      throw new Error('Test1');
-    });
-    operationPromises.push(promise);
-
-    promise = queue.process((resolve) => {
-      return Promise.reject(new Error('Test2'));
-    });
-    operationPromises.push(promise);
-
     await expect(operationPromises[0]).rejects.toThrow('Test1');
     await expect(operationPromises[1]).rejects.toThrow('Test2');
+    await expect(operationPromises[2]).rejects.toThrow('Test3');
+    await expect(operationPromises[3]).resolves.toBe(10);
   });
 });

@@ -56,8 +56,6 @@ class HierarchicalAsyncQueue {
       blockingNodes.push(node); // possibly blocked by itself (another operation submitted before)
     }
 
-    node.data.lastSubmittedOperation = operation;
-
     let blockingNode = blockingNodes[0];
 
     for (let i = 1; i < blockingNodes.length; i++) {
@@ -90,6 +88,8 @@ class HierarchicalAsyncQueue {
     } else {
       operation.execute();
     }
+
+    node.data.lastSubmittedOperation = operation;
   }
 }
 
