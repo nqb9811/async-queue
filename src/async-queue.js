@@ -1,23 +1,33 @@
-const { Queue } = require('./queue');
+const { OperationAbortedError } = require('./exception');
 
 class AsyncQueue {
   constructor() {
-    this._pendingOperations = new Queue();
-    this._processing = false;
+    this._lastSubmittedOperation = null;
   }
 
-  async process(executor) {
+  process(executor) {
     let resolve;
     let reject;
+    let aborted = false;
 
     const promise = new Promise((_resolve, _reject) => {
       resolve = _resolve;
       reject = _reject;
     });
 
+    const abort = () => {
+      // Only set the flag for usage in the execute function
+      // If the current is rejected immediately, the latter could start before the former completes
+      aborted = true;
+    };
+
     const operation = {
       promise,
       execute: () => {
+        if (aborted) {
+          return reject(new OperationAbortedError());
+        }
+
         try {
           const maybePromise = executor(resolve, reject);
 
@@ -30,31 +40,29 @@ class AsyncQueue {
       },
     };
 
-    this._pendingOperations.enqueue(operation);
+    this._awaitOrProcess(operation);
 
-    if (!this._processing) {
-      this._getNextOperationAndProcess();
-    }
-
-    return promise;
+    return { promise, abort };
   }
 
-  _getNextOperationAndProcess() {
-    if (!this._pendingOperations.length) {
-      this._processing = false;
-      return;
+  _awaitOrProcess(operation) {
+    operation.promise
+      .catch(() => null) // to make sure the finally logic is called
+      .finally(() => {
+        if (this._lastSubmittedOperation === operation) {
+          this._lastSubmittedOperation = null;
+        }
+      });
+
+    if (this._lastSubmittedOperation) {
+      this._lastSubmittedOperation.promise
+        .catch(() => null) // to make sure the finally logic is called
+        .finally(() => operation.execute());
+    } else {
+      operation.execute();
     }
 
-    this._processing = true;
-
-    const operation = this._pendingOperations.dequeue();
-    const { promise, execute } = operation;
-
-    promise
-      .catch(() => null) // to make sure the finally logic is called
-      .finally(() => this._getNextOperationAndProcess());
-
-    execute();
+    this._lastSubmittedOperation = operation;
   }
 }
 

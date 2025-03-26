@@ -1,3 +1,4 @@
+const { OperationAbortedError } = require('./exception');
 const { HierarchicalStore } = require('./hierarchical-store');
 
 class HierarchicalAsyncQueue {
@@ -7,19 +8,30 @@ class HierarchicalAsyncQueue {
     this._pendingOperations = new Set();
   }
 
-  async process(path, executor) {
+  process(path, executor) {
     let resolve;
     let reject;
+    let aborted = false;
 
     const promise = new Promise((_resolve, _reject) => {
       resolve = _resolve;
       reject = _reject;
     });
 
+    const abort = () => {
+      // Only set the flag for usage in the execute function
+      // If the current is rejected immediately, the latter could start before the former completes
+      aborted = true;
+    };
+
     const operation = {
       submittedCounter: ++this._operationSubmittedCounter,
       promise,
       execute: () => {
+        if (aborted) {
+          return reject(new OperationAbortedError());
+        }
+
         try {
           const maybePromise = executor(resolve, reject);
 
@@ -43,7 +55,7 @@ class HierarchicalAsyncQueue {
     this._pendingOperations.add(operation);
     this._waitOrProcess(node, operation);
 
-    return promise;
+    return { promise, abort };
   }
 
   _waitOrProcess(node, operation) {

@@ -17,7 +17,7 @@ npm i @nqb/async-queue
 
 ## Usage
 
-Both classes exposes only 1 method "**.process(...)**" with the Promise-like syntax
+Both classes exposes only 1 method "**.process(...)**" with the Promise-like syntax. The method return a Promise which resolves and rejects based on your logic and an "abort" function to abort the operation
 
 ### AsyncQueue
 
@@ -29,15 +29,19 @@ const queue = new AsyncQueue();
 // Just call the process method and pass the async operation
 // For example, the reads/writes need to be done in the same order as client requests
 app.get('/config', async (req, res) => {
-  const config = await queue.process((resolve, reject) => {
+  const { promise, abort } = queue.process((resolve, reject) => {
     getConfig().then(resolve).catch(reject);
   });
+  const config = await promise; // wait for the operation to complete and get resolved data
+  abort(); // or abort it
   res.json({ config });
 });
 app.put('/config', async (req, res) => {
-  await queue.process((resolve, reject) => {
+  const { promise, abort } = queue.process((resolve, reject) => {
     updateConfig().then(resolve).catch(reject);
   });
+  await promise; // wait for the operation to complete
+  abort(); // or abort it
   res.json({ status: 'ok' });
 });
 ```
@@ -53,16 +57,20 @@ const queue = new HierarchicalAsyncQueue('/'); // here path separator is "/"
 // but now we need the path along with the operation
 // For example: this ensures the returned state is always matched with submitted request order
 app.get('/documents', async (req, res) => {
-  const documents = await queue.process('/documents', (resolve, reject) => {
+  const { promise, abort } = queue.process('/documents', (resolve, reject) => {
     getDocuments().then(resolve).catch(reject);
   });
+  const documents = await promise; // wait for the operation to complete and get resolved data
+  abort(); // or abort it
   res.json({ documents });
 });
 app.post('/documents/:name', async (req, res) => {
   const { name } = req.params;
-  await queue.process(`/documents/${name}`, (resolve, reject) => {
+  const { promise, abort } = queue.process(`/documents/${name}`, (resolve, reject) => {
     addDocument(name).then(resolve).catch(reject);
   });
+  await promise; // wait for the operation to complete
+  abort(); // or abort it
   res.json({ status: 'ok' });
 });
 ```
