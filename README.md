@@ -17,7 +17,7 @@ npm i @nqb/async-queue
 
 ## Usage
 
-Both classes exposes only 1 method "**.process(...)**" with the Promise-like syntax. The method return a Promise which resolves and rejects based on your logic and an "abort" function to abort the operation
+Both classes exposes only 1 method "**.process(...)**" with the Promise-like syntax. The method returns a Promise which resolves and rejects based on your logic and an "abort" function to abort the operation
 
 ### AsyncQueue
 
@@ -27,7 +27,7 @@ const { AsyncQueue } = require('@nqb/async-queue');
 // Create a queue
 const queue = new AsyncQueue();
 // Just call the process method and pass the async operation
-// For example, the reads/writes need to be done in the same order as client requests
+// For example, the below reads/writes are done in the same order as client requests
 app.get('/config', async (req, res) => {
   const { promise, abort } = queue.process((resolve, reject) => {
     getConfig().then(resolve).catch(reject);
